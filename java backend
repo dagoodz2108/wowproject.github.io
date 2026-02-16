@@ -1,0 +1,48 @@
+async function calculate() {
+
+  const link = document.getElementById("raiderLink").value;
+
+  // Parse URL
+  const parts = link.split("/");
+  const region = parts[4];
+  const realm = parts[5];
+  const name = parts[6];
+
+  const url = `https://raider.io/api/v1/characters/profile?region=${region}&realm=${realm}&name=${name}&fields=gear`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  const totals = {
+    Weathered: 0,
+    Carved: 0,
+    Runed: 0,
+    Gilded: 0
+  };
+
+  const crestRules = {
+    Explorer: { maxRank: 8, crestType: "Weathered", crestPerRank: 15 },
+    Adventurer: { maxRank: 8, crestType: "Weathered", crestPerRank: 15 },
+    Veteran: { maxRank: 8, crestType: "Carved", crestPerRank: 15 },
+    Champion: { maxRank: 8, crestType: "Runed", crestPerRank: 15 },
+    Hero: { maxRank: 6, crestType: "Gilded", crestPerRank: 15 }
+  };
+
+  data.gear.items.forEach(item => {
+
+    if (!item.upgrade) return;
+
+    const track = item.upgrade.track;
+    const rank = item.upgrade.current_rank;
+
+    const rule = crestRules[track];
+    if (!rule) return;
+
+    const remainingRanks = rule.maxRank - rank;
+    totals[rule.crestType] += remainingRanks * rule.crestPerRank;
+
+  });
+
+  document.getElementById("output").textContent =
+    JSON.stringify(totals, null, 2);
+}
